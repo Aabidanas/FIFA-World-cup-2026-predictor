@@ -12,5 +12,5 @@ PLOTLY_THEME = dict(
 COLORS = {
     "bg_base": "#0A0A0A", "bg_surface": "#111111", "bg_elevated": "#1A1A1A",
     "bg_subtle": "#222222", "text_primary": "#F0F0F0", "text_secondary": "#A0A0A0",
-    "text_muted": "#555555", "accent": "#D9541E"
+    "text_muted": "#555555", "accent": "#B98D7C"
 }

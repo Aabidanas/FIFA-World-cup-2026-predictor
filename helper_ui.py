@@ -97,7 +97,7 @@ def inject_global_css():
     """, unsafe_allow_html=True)
 
 def status_dot(color, label):
-    colors = {"live": "#D9541E", "idle": "#555", "error": "#CC3333"}
+    colors = {"live": "#B98D7C", "idle": "#555", "error": "#B98D7C"}
     st.markdown(f"""
     <span style="display:inline-flex;align-items:center;gap:6px;font-size:0.8rem;color:#777;font-family:var(--font-mono)">
       <span style="width:6px;height:6px;border-radius:50%;background:{colors[color]};box-shadow:0 0 6px {colors[color]}66"></span>{label}

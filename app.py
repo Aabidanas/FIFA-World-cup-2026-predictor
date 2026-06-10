@@ -31,8 +31,11 @@ def load_and_process_historical_data():
     import json
     model = xgb.XGBClassifier()
     model.load_model('xgb_model.json')
+    
     with open('elo_ratings.json', 'r') as f:
         elo_ratings = json.load(f)
+    with open('form_volatility.json', 'r') as f:
+        form_volatility = json.load(f)
     
     le = LabelEncoder()
     le.fit(['EU', 'Other', 'SA'])
@@ -42,7 +45,9 @@ def load_and_process_historical_data():
     eu_teams = {'Germany', 'France', 'Spain', 'Italy', 'England', 'Portugal', 'Netherlands', 'Croatia', 'Belgium', 'Switzerland'}
     def assign_cont(team): return 'SA' if team in sa_teams else 'EU' if team in eu_teams else 'Other'
     
-    return model, elo_ratings, le, features, assign_cont
+    return model, elo_ratings, form_volatility, le, features, assign_cont
+
+xgb_model, elo_ratings, form_volatility, le, features, assign_cont = load_and_process_historical_data()
 
 @st.cache_data
 def process_player_squads():
@@ -54,7 +59,7 @@ def process_player_squads():
     fifa_df['value_proxy'] = np.where(fifa_df['overallRating'] >= 70, ((fifa_df['overallRating'] - 60) ** 3.6) * 110000, 450000)
     def agg_stats(group):
         top_11 = group.nlargest(11, 'overallRating')['overallRating']
-        return pd.Series({'rating_mean': top_11.mean(), 'rating_std': top_11.std() if len(top_11) >= 11 else 5.0, 'value_m': group.nlargest(23, 'overallRating')['value_proxy'].sum() / 1000000})
+        return pd.Series({'rating_mean': top_11.mean(), 'value_m': group.nlargest(23, 'overallRating')['value_proxy'].sum() / 1000000})
     df = fifa_df.groupby('nationality').apply(agg_stats).reset_index()
     df['nationality'] = df['nationality'].replace({'United States': 'USA', 'Republic of Ireland': 'Ireland', 'Korea Republic': 'South Korea', 'Czech Republic': 'Czechia', 'China PR': 'China', 'Bosnia & Herzegovina': 'Bosnia and Herzegovina', 'IR Iran': 'Iran'})
     return df
@@ -140,7 +145,7 @@ with st.sidebar:
         ("SQUAD ELASTICITY (VALUATION)", OPTIMAL_ELASTICITY * 100),
         ("HISTORICAL PEDIGREE (XGBOOST)", OPTIMAL_PEDIGREE * 100),
         ("RECENT TROPHY ALPHA", OPTIMAL_TROPHY * 100),
-        ("SQUAD VOLATILITY (STD DEV)", OPTIMAL_UNIFORMITY * 100)
+        ("FORM VOLATILITY (Δ ELO)", OPTIMAL_UNIFORMITY * 100)
     ]
     
     for label, val in weights:
@@ -174,7 +179,7 @@ with st.sidebar:
             
         st.markdown(f"<div style='font-size:0.75rem; color:var(--text-muted); font-family:var(--font-mono); margin-top:-10px; margin-bottom:15px;'>↳ SCENARIO: <span style='color:{color}; font-weight:bold;'>{crisis_desc}</span></div>", unsafe_allow_html=True)
     
-    st.markdown("<div style='margin-top: 40px; color:#555; font-size:0.75rem; font-family:var(--font-mono);'>v4.1.0-enterprise<br>Rendering Ops</div>", unsafe_allow_html=True)
+    st.markdown("<div style='margin-top: 40px; color:#555; font-size:0.75rem; font-family:var(--font-mono);'>v4.2.0-enterprise<br>Vol Ops</div>", unsafe_allow_html=True)
 
 # --- MATH ENGINE ---
 def calculate_match_probability(team1, team2, target=None, penalty=0.0):
@@ -184,13 +189,13 @@ def calculate_match_probability(team1, team2, target=None, penalty=0.0):
     if team1 == target: r1 -= penalty
     if team2 == target: r2 -= penalty
     
-    std1 = nt_df.loc[nt_df['nationality'] == team1, 'rating_std'].values[0] if team1 in nt_df['nationality'].values else 4.0
-    std2 = nt_df.loc[nt_df['nationality'] == team2, 'rating_std'].values[0] if team2 in nt_df['nationality'].values else 4.0
+    vol1 = form_volatility.get(team1, 10.0)
+    vol2 = form_volatility.get(team2, 10.0)
     v1 = nt_df.loc[nt_df['nationality'] == team1, 'value_m'].values[0] if team1 in nt_df['nationality'].values else 5.0
     v2 = nt_df.loc[nt_df['nationality'] == team2, 'value_m'].values[0] if team2 in nt_df['nationality'].values else 5.0
     
     talent_baseline = 0.5 + ((r1 - r2) * 0.035)
-    uniformity_modifier = (std2 - std1) * OPTIMAL_UNIFORMITY
+    uniformity_modifier = (vol2 - vol1) * OPTIMAL_UNIFORMITY
     value_elasticity = ((1 / (1 + np.exp(-0.004 * (v1 - 800)))) - (1 / (1 + np.exp(-0.004 * (v2 - 800))))) * OPTIMAL_ELASTICITY
     trophy_modifier = (trophy_weights.get(team1, 0.0) - trophy_weights.get(team2, 0.0)) * (OPTIMAL_TROPHY / 0.05)
     
@@ -203,7 +208,7 @@ def calculate_match_probability(team1, team2, target=None, penalty=0.0):
     if prob > 0.54: prob = min(0.99, prob + 0.12)
     elif prob < 0.46: prob = max(0.01, prob - 0.12)
     
-    return prob, {"r1": r1, "r2": r2, "v1": v1/1000, "v2": v2/1000, "std1": std1, "std2": std2, "elo1": elo1, "elo2": elo2}
+    return prob, {"r1": r1, "r2": r2, "v1": v1/1000, "v2": v2/1000, "vol1": vol1, "vol2": vol2, "elo1": elo1, "elo2": elo2}
 
 # --- EXECUTION STATE ---
 if "execution_triggered" not in st.session_state:
@@ -292,8 +297,6 @@ if st.session_state.execution_triggered:
         cols = st.columns(cols_layout, gap="medium")
         for idx, m in enumerate(results_tree[stage_key]):
             with cols[idx % cols_layout]:
-                
-                # HTML String is completely flattened to left margin to bypass Streamlit Markdown Parsing.
                 html_card = f"""
 <label class="flip-container" title="Click to inspect metrics">
 <input type="checkbox" style="display:none;">
@@ -322,7 +325,7 @@ if st.session_state.execution_triggered:
 <div style="font-family: var(--font-mono); font-size: 0.75rem; color: var(--text-secondary); line-height:1.5;">
 Val: €{m['stats']['v1']:.2f}B<br>
 Rtg: {m['stats']['r1']:.1f}<br>
-Vol: {m['stats']['std1']:.2f}σ<br>
+Vol: {m['stats']['vol1']:.1f} ΔElo<br>
 Elo: {m['stats']['elo1']:.0f}
 </div>
 </div>
@@ -331,7 +334,7 @@ Elo: {m['stats']['elo1']:.0f}
 <div style="font-family: var(--font-mono); font-size: 0.75rem; color: var(--text-secondary); line-height:1.5;">
 Val: €{m['stats']['v2']:.2f}B<br>
 Rtg: {m['stats']['r2']:.1f}<br>
-Vol: {m['stats']['std2']:.2f}σ<br>
+Vol: {m['stats']['vol2']:.1f} ΔElo<br>
 Elo: {m['stats']['elo2']:.0f}
 </div>
 </div>

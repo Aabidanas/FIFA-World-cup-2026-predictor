@@ -75,10 +75,10 @@ def build_executive_pdf(results_tree, final_winner, shock_target):
     pdf.set_fill_color(14, 17, 23)
     pdf.rect(0, 0, 210, 297, 'F')
     
-    pdf.set_text_color(255, 255, 255)
+    pdf.set_text_color(217, 84, 30) # Orange branding in PDF
     pdf.set_font("Courier", 'B', 18)
     pdf.cell(0, 10, "MATRIX ENGINE // EXECUTIVE BRIEF", ln=True)
-    pdf.set_draw_color(50, 50, 50)
+    pdf.set_draw_color(217, 84, 30)
     pdf.line(10, 22, 200, 22)
     pdf.ln(8)
     
@@ -119,7 +119,7 @@ def build_executive_pdf(results_tree, final_winner, shock_target):
     
     for stage in ["Round of 16", "Quarter-Finals", "Semi-Finals", "World Cup Final"]:
         pdf.set_font("Courier", 'B', 10)
-        pdf.set_text_color(200, 200, 200)
+        pdf.set_text_color(217, 84, 30)
         pdf.cell(0, 8, f"--- {stage.upper()} ---", ln=True)
         pdf.set_font("Courier", '', 9)
         pdf.set_text_color(140, 140, 140)
@@ -134,8 +134,8 @@ def build_executive_pdf(results_tree, final_winner, shock_target):
 
 # --- SIDEBAR ARCHITECTURE ---
 with st.sidebar:
-    st.markdown("<h2 style='color:#F0F0F0; font-family:var(--font-mono); font-size:1.1rem; letter-spacing:1px;'>◼ MATRIX_ENGINE</h2>", unsafe_allow_html=True)
-    st.markdown("<hr style='border:none; height:1px; background-color:#222; margin: 1rem 0;' />", unsafe_allow_html=True)
+    st.markdown("<h2 style='color:#D9541E; font-family:var(--font-mono); font-size:1.1rem; letter-spacing:1px;'>◼ MATRIX_ENGINE</h2>", unsafe_allow_html=True)
+    st.markdown("<hr style='border:none; height:1px; background-color:#D9541E; margin: 1rem 0;' />", unsafe_allow_html=True)
     status_dot("live", "SYS_ACTIVE")
     status_dot("idle", "ML_INFERENCE_READY")
     
@@ -152,10 +152,10 @@ with st.sidebar:
         st.markdown(f"""
         <div style="margin-bottom: 12px;">
             <div style="display: flex; justify-content: space-between; font-family: var(--font-mono); font-size: 0.65rem; color: var(--text-secondary); margin-bottom: 4px; letter-spacing: 0.5px;">
-                <span>{label}</span><span style="color:var(--text-primary);">{val:.1f}%</span>
+                <span>{label}</span><span style="color:var(--accent); font-weight:bold;">{val:.1f}%</span>
             </div>
             <div style="width: 100%; height: 3px; background: var(--bg-subtle); border-radius: 2px;">
-                <div style="width: {val}%; height: 100%; background: var(--text-primary); border-radius: 2px;"></div>
+                <div style="width: {val}%; height: 100%; background: var(--accent); border-radius: 2px;"></div>
             </div>
         </div>
         """, unsafe_allow_html=True)
@@ -287,7 +287,7 @@ if st.session_state.execution_triggered:
                 html = f"<div class='card' style='padding: 1rem;'><div class='card-label'>GROUP {g_name}</div>"
                 for t, p in sorted(teams_pts.items(), key=lambda x: x[1], reverse=True):
                     intensity = p / 9.0  
-                    bg_color = f"rgba(255, 255, 255, {intensity * 0.15})"
+                    bg_color = f"rgba(217, 84, 30, {intensity * 0.15})" # Orange Heatmap Intensity
                     border_style = "border-left: 3px solid var(--accent);" if p >= max(teams_pts.values()) else "border-left: 3px solid transparent;"
                     html += f"<div style='margin-top:6px; padding: 6px 10px; background-color: {bg_color}; {border_style} border-radius: 4px; font-family:var(--font-mono); font-size:0.85rem; display:flex; justify-content:space-between; color:var(--text-primary);'><span>{get_code(t)} {t.upper()}</span> <span style='font-weight:700;'>{p}</span></div>"
                 html += "</div>"
@@ -310,13 +310,13 @@ if st.session_state.execution_triggered:
 </div>
 <div style="border-top: 1px solid var(--bg-subtle); padding-top: 12px; position: absolute; bottom: 20px; width: calc(100% - 3rem);">
 <div style="font-size: 0.65rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 2px;">Advancing</div>
-<div style="font-size: 1.1rem; font-weight: 700; color: var(--text-primary); font-family: var(--font-mono);">
+<div style="font-size: 1.1rem; font-weight: 700; color: var(--accent); font-family: var(--font-mono);">
 {get_code(m['winner'])} {m['winner'].upper()}
 </div>
 </div>
 </div>
 <div class="back card">
-<div class="card-label" style="color:var(--text-primary); border-bottom: 1px solid var(--bg-subtle); padding-bottom: 5px; margin-bottom: 10px;">
+<div class="card-label" style="color:var(--accent); border-bottom: 1px solid var(--bg-subtle); padding-bottom: 5px; margin-bottom: 10px;">
 {get_code(m['winner'])} WIN PROB: {m['prob']*100:.1f}%
 </div>
 <div style="display:flex; justify-content:space-between;">
@@ -358,9 +358,9 @@ Elo: {m['stats']['elo2']:.0f}
         final_winner = results_tree["World Cup Final"][0]["winner"]
         
         st.markdown(f"""
-            <div style="text-align: center; margin-top: 40px; padding: 60px; border: 1px solid var(--text-muted); background: var(--bg-surface); border-radius: var(--radius-lg); box-shadow: var(--shadow-card);">
+            <div style="text-align: center; margin-top: 40px; padding: 60px; border: 1px solid var(--accent); background: var(--bg-surface); border-radius: var(--radius-lg); box-shadow: 0 0 30px rgba(217, 84, 30, 0.15);">
                 <div style="color:var(--text-muted); font-family:var(--font-mono); font-size:0.85rem; letter-spacing:0.2em; margin-bottom:1rem;">TOURNAMENT CONVERGENCE ACHIEVED</div>
-                <h1 style="font-size: 4rem; color: var(--text-primary); margin: 0; font-family: var(--font-display); font-weight: 700; letter-spacing: -0.04em;">
+                <h1 style="font-size: 4rem; color: var(--accent); margin: 0; font-family: var(--font-display); font-weight: 700; letter-spacing: -0.04em;">
                     {get_code(final_winner)} {final_winner.upper()}
                 </h1>
             </div>

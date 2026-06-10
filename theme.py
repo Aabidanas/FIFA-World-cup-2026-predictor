@@ -4,7 +4,7 @@ PLOTLY_THEME = dict(
     font=dict(family='Inter', color='#777777', size=11),
     xaxis=dict(gridcolor='#1E1E1E', zerolinecolor='#333', tickfont=dict(color='#555')),
     yaxis=dict(gridcolor='#1E1E1E', zerolinecolor='#333', tickfont=dict(color='#555')),
-    colorway=['#D9541E', '#888888', '#444444', '#CCCCCC', '#222222'],
+    colorway=["#A8593A", '#888888', '#444444', '#CCCCCC', '#222222'],
     margin=dict(l=16, r=16, t=32, b=16),
     hoverlabel=dict(bgcolor='#1A1A1A', bordercolor='#333', font_color='#F0F0F0')
 )

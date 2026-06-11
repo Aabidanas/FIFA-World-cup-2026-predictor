@@ -276,7 +276,7 @@ if st.session_state.execution_triggered:
                 })
             if len(next_tier_teams) > 1:
                 current_tier = [(next_tier_teams[j], next_tier_teams[j+1]) for j in range(0, len(next_tier_teams), 2)]
-        status.update(label="CONVERGENCE COMPLETE", state="complete")
+        status.update(label="ANALYSIS COMPLETE", state="complete")
 
     tab_g, tab_32, tab_16, tab_q, tab_s, tab_f = st.tabs(["STANDINGS", "R32", "R16", "QUARTERS", "SEMIS", "GRAND FINAL"])
 

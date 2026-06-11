@@ -134,7 +134,7 @@ def build_executive_pdf(results_tree, final_winner, shock_target):
 
 # --- SIDEBAR ARCHITECTURE ---
 with st.sidebar:
-    st.markdown("<h2 style='color:#D9541E; font-family:var(--font-mono); font-size:1.1rem; letter-spacing:1px;'>◼ MATRIX_ENGINE</h2>", unsafe_allow_html=True)
+    st.markdown("<h2 style='color:#D9541E; font-family:var(--font-mono); font-size:1.1rem; letter-spacing:1px;'>◼ Model Tuning</h2>", unsafe_allow_html=True)
     st.markdown("<hr style='border:none; height:1px; background-color:#D9541E; margin: 1rem 0;' />", unsafe_allow_html=True)
     status_dot("live", "SYS_ACTIVE")
     status_dot("idle", "ML_INFERENCE_READY")
@@ -218,7 +218,7 @@ with col2:
     if st.button("EXECUTE ⌘E", type="primary", use_container_width=True):
         st.session_state.execution_triggered = True
 
-section_divider("SYSTEM OUTPUT")
+section_divider("Prediction")
 
 if st.session_state.execution_triggered:
     world_cup_2026_groups = {
@@ -261,7 +261,7 @@ if st.session_state.execution_triggered:
     current_tier = knockout_grid
     results_tree = {}
     
-    with st.status("EXECUTING LIKELIHOOD CONVERGENCE...", expanded=True) as status:
+    with st.status("Predicting...", expanded=True) as status:
         for idx, stage_name in enumerate(stages_list):
             results_tree[stage_name] = []
             next_tier_teams = []
@@ -370,7 +370,7 @@ Elo: {m['stats']['elo2']:.0f}
         pdf_bytes = build_executive_pdf(results_tree, final_winner, shock_target if enable_shock else None)
         
         st.download_button(
-            label="DOWNLOAD EXECUTIVE PDF BRIEF",
+            label="DOWNLOAD COMPLETE ANALYSIS",
             data=pdf_bytes,
             file_name="matrix_briefing.pdf",
             mime="application/pdf",
